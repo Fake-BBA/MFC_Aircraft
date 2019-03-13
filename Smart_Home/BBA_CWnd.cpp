@@ -19,8 +19,7 @@ int BBA_CWnd::CreatWindow(CString wndTitle, CRect *rect, CWnd* pParent, DWORD id
 	}
 
 	int ret=CreateEx(NULL, strWndClass, TEXT(wndTitle),
-		WS_OVERLAPPED | WS_SYSMENU |WS_HSCROLL,
-		*rect, pParent,id);
+		style,*rect, pParent,id);
 	ShowWindow(SW_SHOW);
 	UpdateWindow();	//ÖØ»æ´°¿Ú
 	return ret;

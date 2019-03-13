@@ -1,6 +1,8 @@
 #pragma once
 #include <afxwin.h>
 #include <atldef.h>
+
+
 class BBA_CWnd :public CWnd {
 public:
 	BBA_CWnd();
