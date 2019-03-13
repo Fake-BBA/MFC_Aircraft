@@ -180,6 +180,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BBA_Coordinate.h" />
     <ClInclude Include="BBA_CWnd.h" />
     <ClInclude Include="bba_log.h" />
     <ClInclude Include="BBA_SOCKET.h" />
@@ -191,6 +192,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BBA_Coordinate.cpp" />
     <ClCompile Include="BBA_CWnd.cpp" />
     <ClCompile Include="bba_log.cpp" />
     <ClCompile Include="BBA_SOCKET.cpp" />
