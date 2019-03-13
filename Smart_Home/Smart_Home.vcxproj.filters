@@ -39,6 +39,9 @@
     <ClInclude Include="smartHomeTypedef.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="BBA_CWnd.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Smart_Home.cpp">
@@ -54,6 +57,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="bba_log.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BBA_CWnd.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
