@@ -14,12 +14,12 @@ int BBA_CWnd::CreatWindow(CString wndTitle, CRect *rect, CWnd* pParent, DWORD id
 		rect = &rectTemp;
 		rectTemp.top = 500;
 		rectTemp.left = 500;
-		rectTemp.right = 1000;
+		rectTemp.right = 2000;
 		rectTemp.bottom = 1000;
 	}
 
 	int ret=CreateEx(NULL, strWndClass, TEXT(wndTitle),
-		WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX,
+		WS_OVERLAPPED | WS_SYSMENU |WS_HSCROLL,
 		*rect, pParent,id);
 	ShowWindow(SW_SHOW);
 	UpdateWindow();	//ÖØ»æ´°¿Ú
