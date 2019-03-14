@@ -7,7 +7,7 @@ public:
 	~BBA_CoordinateWaveform();
 public:
 	CPen pen;
-#define MAX_POINT	100
+#define MAX_POINT	300
 	POINT point[MAX_POINT];
 	POINT startPoint;	//起始点
 	POINT endPoint;		//最新的点

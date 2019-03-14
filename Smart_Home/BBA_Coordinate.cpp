@@ -3,7 +3,7 @@
 
 BBA_CoordinateWaveform::BBA_CoordinateWaveform() 
 {
-	endPoint.x = 900;
+	endPoint.x = 1400;
 	endPoint.y = 222;
 
 	startPoint.x = 0;
@@ -11,30 +11,36 @@ BBA_CoordinateWaveform::BBA_CoordinateWaveform()
 
 	for (int i = 0; i < MAX_POINT; i++)
 	{
-		point[i].x = 700;
-		point[i].y = 222;
+		point[i].x = endPoint.x;
+		point[i].y = endPoint.y;
 	}
-
 }
 
 BBA_CoordinateWaveform::~BBA_CoordinateWaveform() {};
 
 int BBA_CoordinateWaveform::CreatWaveform(int x, int y)
 {
-	int i;
-	x = 5;
+	//point[MAX_POINT - 1].x = endPoint.x;	//刷新点位置固定
 	
-	//将所有坐标的索引向前移动一个索引单位
-	for (i = 0; i<MAX_POINT-2; i++)
+	//Y轴的点往左移动响应距离
+	for (int i = 0; i < MAX_POINT; i++)
 	{
-		point[i].x = point[i + 1].x - point[i].x;
-		point[i].y = point[i + 1].y;
+		point[i].y = point[i + 1].y;		
 	}
-
-	point[MAX_POINT-1].x = endPoint.x;	//刷新点位置固定
-	point[MAX_POINT - 1].y = endPoint.y+ (int)y %100-50;
-
-	
+	//先计算每一个相邻点的距离
+	int distanceX[MAX_POINT];
+	for (int i = MAX_POINT-1; i >= 0; i--)
+	{
+		distanceX[i] = point[i + 1].x - point[i].x;
+	}
+	//加入新点
+	point[MAX_POINT - 2].x = point[MAX_POINT - 1].x - x;
+	//重新计算每个相邻点的距离=前一个新点的距离-前一个新点与该点的距离
+	for (int i = MAX_POINT - 3; i >= 0; i--)
+	{
+		point[i].x = point[i + 1].x - distanceX[i+1];
+	}
+	point[MAX_POINT - 1].y = endPoint.y + y;
 
 	return 0;
 }
@@ -64,7 +70,7 @@ int BBA_Coordinate::CreatCoordinateWindow(CString wndTitle, CRect *rect, CWnd* p
 {
 	unsigned long int myStyle = WS_SYSMENU | WS_HSCROLL;
 	int ret = CreatWindow(wndTitle, rect, pParent, id, myStyle);
-	SetTimer(IDC_TIMER_WAVEFORM, 20, NULL);	//设置定时器
+	SetTimer(IDC_TIMER_WAVEFORM, 50, NULL);	//设置定时器
 	return ret;
 }
 
@@ -77,14 +83,12 @@ END_MESSAGE_MAP()
 
 void BBA_Coordinate::OnTimer(UINT_PTR nIDEvent)
 {
-	//int i;
-	//for ( i= MAX_POINT - 2; i >0 ; i--)
-	//{
-	//	;// waveform.point[i] = waveform.point[i - 1];
-	//}
-	waveform.CreatWaveform(40,rand());
-	//KillTimer(IDC_TIMER_WAVEFORM);
+
+	//waveform.CreatWaveform(rand()%2,rand()%50 -50);
+	waveform.CreatWaveform(5, rand() % 100-50);
 	Invalidate();
+	//KillTimer(IDC_TIMER_WAVEFORM);
+	
 }
 
 int BBA_Coordinate::DrawCoordinate(CDC *pDC)
