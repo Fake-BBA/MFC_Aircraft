@@ -18,9 +18,27 @@ BBA_CoordinateWaveform::BBA_CoordinateWaveform()
 
 BBA_CoordinateWaveform::~BBA_CoordinateWaveform() {};
 
+BBA_CoordinateWaveform::BBA_CoordinateWaveform(BBA_CoordinateWaveform &p)
+{
+	memcpy(point, p.point, MAX_POINT);
+	startPoint=p.startPoint;	//起始点
+	endPoint=p.endPoint;		//最新的点
+}
+
+BBA_CoordinateWaveform BBA_CoordinateWaveform:: operator=(const BBA_CoordinateWaveform &p)
+{
+	if (this != &p)
+	{
+		memcpy(point, p.point, MAX_POINT);
+		startPoint = p.startPoint;	//起始点
+		endPoint = p.endPoint;		//最新的点
+	}
+	return *this;
+}
+
 int BBA_CoordinateWaveform::CreatWaveform(int x, int y)
 {
-	//point[MAX_POINT - 1].x = endPoint.x;	//刷新点位置固定
+	point[MAX_POINT - 1].x = endPoint.x;	//刷新点位置固定
 	
 	//Y轴的点往左移动响应距离
 	for (int i = 0; i < MAX_POINT; i++)
@@ -70,7 +88,6 @@ int BBA_Coordinate::CreatCoordinateWindow(CString wndTitle, CRect *rect, CWnd* p
 {
 	unsigned long int myStyle = WS_SYSMENU | WS_HSCROLL;
 	int ret = CreatWindow(wndTitle, rect, pParent, id, myStyle);
-	SetTimer(IDC_TIMER_WAVEFORM, 50, NULL);	//设置定时器
 	return ret;
 }
 
@@ -78,16 +95,23 @@ BEGIN_MESSAGE_MAP(BBA_Coordinate, BBA_CWnd)
 	ON_WM_PAINT()
 	ON_WM_SIZE()
 	ON_WM_TIMER(IDC_TIMER_WAVEFORM, &BBA_Coordinate::OnTimer(UINT_PTR nIDEvent))
+	ON_BN_CLICKED(IDC_BTN_REFLASH, &BBA_Coordinate::OnBtnReflashClick)
 
+	ON_WM_CREATE()
 END_MESSAGE_MAP()
 
 void BBA_Coordinate::OnTimer(UINT_PTR nIDEvent)
 {
 
-	//waveform.CreatWaveform(rand()%2,rand()%50 -50);
-	waveform.CreatWaveform(5, rand() % 100-50);
-	Invalidate();
-	//KillTimer(IDC_TIMER_WAVEFORM);
+	BBA_CoordinateWaveform waveform;
+	int n=waveformList.GetCount();
+	for (int i = 0; i < n; i++)
+	{
+		POSITION pos = waveformList.FindIndex(i);
+		waveformList.GetAt(pos).CreatWaveform(5, rand() % 100 - 50);
+	}
+	Invalidate();	//发出重绘消息OnPaint
+	
 	
 }
 
@@ -129,7 +153,7 @@ void BBA_Coordinate::OnPaint()
 {
 	//获得可绘制屏幕区域大小
 	this->GetClientRect(&m_RectClientWindow);
-
+	
 	m_pPDC = new CPaintDC(this);
 	CDC MemDC; //首先定义一个显示设备对象
 	CBitmap MemBitmap;//定义一个位图对象
@@ -147,7 +171,16 @@ void BBA_Coordinate::OnPaint()
 	MemDC.FillSolidRect(0, 0, m_RectClientWindow.Width(), m_RectClientWindow.Height(), RGB(255, 255, 255));
 	//绘图
 	DrawCoordinate(&MemDC);		//画出坐标轴
-	waveform.DrawWaveform(&MemDC,RGB(255,0,0), 1);	//画出波形
+	
+	int n = waveformList.GetCount();
+	for (int i = 0; i < n; i++)
+	{
+		POSITION pos = waveformList.FindIndex(i);
+		waveformList.GetAt(pos).endPoint.x = m_RectClientWindow.right;
+		waveformList.GetAt(pos).endPoint.y = m_RectClientWindow.bottom / 2;
+		waveformList.GetAt(pos).DrawWaveform(&MemDC, RGB(255, 0, 0), 1);	//画出波形
+	}
+
 	//将内存中的图拷贝到屏幕上进行显示
 	m_pPDC->BitBlt(0, 0, m_RectClientWindow.Width(), m_RectClientWindow.Height(), &MemDC, 0, 0, SRCCOPY);
 	//绘图完成后的清理
@@ -163,4 +196,40 @@ void BBA_Coordinate::OnSize(UINT nType, int cx, int cy)
 	BBA_CWnd::OnSize(nType, cx, cy);
 
 	// TODO: 在此处添加消息处理程序代码
+}
+
+
+int BBA_Coordinate::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	if (BBA_CWnd::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+	// TODO:  在此添加您专用的创建代码
+	CString temp;
+	temp.LoadStringA(IDS_STRING_BTN_REFLASH_START);
+	m_BtReflash.Create(temp, WS_VISIBLE | WS_CHILD,CRect(0,0,100,100),this,IDC_BTN_REFLASH);
+
+	BBA_CoordinateWaveform *waveform=new BBA_CoordinateWaveform();
+	waveformList.AddTail(*waveform);
+	return 0;
+}
+
+void BBA_Coordinate::OnBtnReflashClick()
+{
+	CString title;
+	CString startTitle,stopTitle;
+	startTitle.LoadStringA(IDS_STRING_BTN_REFLASH_START);
+	stopTitle.LoadStringA(IDS_STRING_BTN_REFLASH_STOP);
+
+	m_BtReflash.GetWindowTextA(title);
+	if (title == startTitle)
+	{
+		SetTimer(IDC_TIMER_WAVEFORM, 50, NULL);	//设置定时器
+		m_BtReflash.SetWindowTextA(stopTitle);
+	}
+	else
+	{
+		KillTimer(IDC_TIMER_WAVEFORM);
+		m_BtReflash.SetWindowTextA(startTitle);
+	}
 }
