@@ -149,6 +149,7 @@ int BBA_Coordinate::DrawCoordinate(CDC *pDC)
 	}
 	return 0;
 }
+
 void BBA_Coordinate::OnPaint()
 {
 	//获得可绘制屏幕区域大小
@@ -205,10 +206,25 @@ int BBA_Coordinate::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 
 	// TODO:  在此添加您专用的创建代码
+	//创建各种按钮
 	CString temp;
 	temp.LoadStringA(IDS_STRING_BTN_REFLASH_START);
-	m_BtReflash.Create(temp, WS_VISIBLE | WS_CHILD,CRect(0,0,100,100),this,IDC_BTN_REFLASH);
+	m_BtReflash.Create(temp, WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,CRect(0,0,100,100),this,IDC_BTN_REFLASH);
+	//获得可绘制屏幕区域大小
+	this->GetClientRect(&m_RectClientWindow);
+	CRect rect(0,0,0,0);
+	rect.bottom= 200;
+	rect.right = 100;
+	
+	for (int i = 0; i < LIST_NUM; i++)
+	{
+		temp.LoadStringA(IDS_STRING_BTN_PITCH+i);
+		m_ListBtn[i].Create(temp, WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX, CRect(0, 0, 30, 30), this, IDC_BTN_REFLASH+i);
+		//m_ListBtn[i].MoveWindow(&rect);
+		//m_ListBtn[i].SetWindowPos(0,0,30,30);
+	}
 
+	
 	BBA_CoordinateWaveform *waveform=new BBA_CoordinateWaveform();
 	waveformList.AddTail(*waveform);
 	return 0;

@@ -52,6 +52,8 @@ public:
 public:
 #define IDC_BTN_REFLASH	2048
 	CButton m_BtReflash;	//刷新控制按钮
+#define LIST_NUM	9
+	CButton m_ListBtn[LIST_NUM];	//复选按钮
 public:
 	
 	afx_msg void OnSize(UINT nType, int cx, int cy);
