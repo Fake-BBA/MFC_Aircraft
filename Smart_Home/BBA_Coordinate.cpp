@@ -27,7 +27,7 @@ BBA_CoordinateWaveform::BBA_CoordinateWaveform(BBA_CoordinateWaveform &p)
 
 BBA_CoordinateWaveform BBA_CoordinateWaveform:: operator=(const BBA_CoordinateWaveform &p)
 {
-	if (this != &p)
+	//if (this != &p)
 	{
 		memcpy(point, p.point, MAX_POINT);
 		startPoint = p.startPoint;	//起始点
