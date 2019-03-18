@@ -63,9 +63,9 @@ int BBA_CoordinateWaveform::CreatWaveform(int x, int y)
 	return 0;
 }
 
-int BBA_CoordinateWaveform::DrawWaveform(CDC *pDC,COLORREF colour, int nWidth)
+int BBA_CoordinateWaveform::DrawWaveform(CDC *pDC, int nWidth)
 {
-	pen.CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+	pen.CreatePen(PS_SOLID, nWidth, colour);
 	pDC->SelectObject(pen);
 	pDC->Polyline(point, MAX_POINT);	//画出波形
 	pen.DeleteObject();
@@ -80,6 +80,22 @@ BBA_Coordinate::BBA_Coordinate()
 	m_unitOneX = 40;	//40个像素代表X轴的一个小格
 	m_unitOneY = 40;	//40个像素代表Y轴的一个小格
 	m_uintLen=5;	//刻度的长度
+
+	m_ListColor[0] = RGB(255, 0, 0);
+	m_ListColor[1] = RGB(255, 125, 0);
+	m_ListColor[2] = RGB(255, 255, 0);
+	m_ListColor[3] = RGB(0, 255, 0);
+	m_ListColor[4] = RGB(0, 255, 255);
+	m_ListColor[5] = RGB(0, 0, 255);
+	m_ListColor[6] = RGB(255, 0, 125);
+	m_ListColor[7] = RGB(125, 0, 255);
+	m_ListColor[8] = RGB(255, 125, 255);
+
+	width = 1;	//坐标轴粗细
+	colour = (0, 0, 0);	//坐标轴为黑色
+
+	m_CheckBtnHeigh = 20;	//复选框高度为20
+	m_CheckBtnWidth = 65;	//复选框长度为65
 }
 
 BBA_Coordinate::~BBA_Coordinate() {};
@@ -96,14 +112,13 @@ BEGIN_MESSAGE_MAP(BBA_Coordinate, BBA_CWnd)
 	ON_WM_SIZE()
 	ON_WM_TIMER(IDC_TIMER_WAVEFORM, &BBA_Coordinate::OnTimer(UINT_PTR nIDEvent))
 	ON_BN_CLICKED(IDC_BTN_REFLASH, &BBA_Coordinate::OnBtnReflashClick)
+	ON_COMMAND_RANGE(IDC_CHECK_BTN_START+1, IDC_CHECK_BTN_START + LIST_NUM, OnCheckButton)
 
 	ON_WM_CREATE()
 END_MESSAGE_MAP()
 
 void BBA_Coordinate::OnTimer(UINT_PTR nIDEvent)
 {
-
-	BBA_CoordinateWaveform waveform;
 	int n=waveformList.GetCount();
 	for (int i = 0; i < n; i++)
 	{
@@ -111,12 +126,14 @@ void BBA_Coordinate::OnTimer(UINT_PTR nIDEvent)
 		waveformList.GetAt(pos).CreatWaveform(5, rand() % 100 - 50);
 	}
 	Invalidate();	//发出重绘消息OnPaint
-	
-	
 }
 
 int BBA_Coordinate::DrawCoordinate(CDC *pDC)
 {
+	pen.CreatePen(PS_SOLID, width, colour);
+	pDC->SelectObject(&pen);
+	
+
 	m_StartX.x = 0;
 	m_StartX.y= m_RectClientWindow.Height() / 2 + m_CoordinateCenter_X;
 	m_EndX.x = m_RectClientWindow.Width();
@@ -147,6 +164,7 @@ int BBA_Coordinate::DrawCoordinate(CDC *pDC)
 		pDC->MoveTo(m_StartY.x , m_StartY.y + i * m_unitOneY);
 		pDC->LineTo(m_StartY.x + m_uintLen, m_StartY.y + i * m_unitOneY);
 	}
+	pen.DeleteObject();
 	return 0;
 }
 
@@ -163,7 +181,7 @@ void BBA_Coordinate::OnPaint()
 	MemDC.CreateCompatibleDC(NULL);
 	//这时还不能绘图，因为没有地方画 ^_^
 	//下面建立一个与屏幕显示兼容的位图，至于位图的大小嘛，可以用窗口的大小
-	MemBitmap.CreateCompatibleBitmap(m_pPDC, m_RectClientWindow.Width(), m_RectClientWindow.Height());
+	MemBitmap.CreateCompatibleBitmap(m_pPDC, m_RectClientWindow.right, m_RectClientWindow.bottom-m_CheckBtnHeigh);
 	//将位图选入到内存显示设备中
 	//只有选入了位图的内存显示设备才有地方绘图，画到指定的位图上
 	CBitmap *pOldBit = MemDC.SelectObject(&MemBitmap);
@@ -171,22 +189,21 @@ void BBA_Coordinate::OnPaint()
 	//你也可以用自己应该用的颜色
 	MemDC.FillSolidRect(0, 0, m_RectClientWindow.Width(), m_RectClientWindow.Height(), RGB(255, 255, 255));
 	//绘图
-	DrawCoordinate(&MemDC);		//画出坐标轴
-	
 	int n = waveformList.GetCount();
 	for (int i = 0; i < n; i++)
 	{
 		POSITION pos = waveformList.FindIndex(i);
 		waveformList.GetAt(pos).endPoint.x = m_RectClientWindow.right;
 		waveformList.GetAt(pos).endPoint.y = m_RectClientWindow.bottom / 2;
-		waveformList.GetAt(pos).DrawWaveform(&MemDC, RGB(255, 0, 0), 1);	//画出波形
+		waveformList.GetAt(pos).DrawWaveform(&MemDC,1);	//画出波形
 	}
-
+	DrawCoordinate(&MemDC);		//画出坐标轴
 	//将内存中的图拷贝到屏幕上进行显示
 	m_pPDC->BitBlt(0, 0, m_RectClientWindow.Width(), m_RectClientWindow.Height(), &MemDC, 0, 0, SRCCOPY);
 	//绘图完成后的清理
 	MemBitmap.DeleteObject();
 	MemDC.DeleteDC();
+
 
 	//delete m_pPDC;
 }
@@ -212,21 +229,23 @@ int BBA_Coordinate::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_BtReflash.Create(temp, WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,CRect(0,0,100,100),this,IDC_BTN_REFLASH);
 	//获得可绘制屏幕区域大小
 	this->GetClientRect(&m_RectClientWindow);
-	CRect rect(0,0,0,0);
-	rect.bottom= 200;
-	rect.right = 100;
+	CRect rect;
+	rect.top = m_RectClientWindow.bottom - m_CheckBtnHeigh;
+	rect.bottom = m_RectClientWindow.bottom;	//将复选框放置到最底
 	
 	for (int i = 0; i < LIST_NUM; i++)
 	{
+		rect.left = i* m_CheckBtnWidth;
+		rect.right = rect.left+ m_CheckBtnWidth;//每个复选框隔60像素
 		temp.LoadStringA(IDS_STRING_BTN_PITCH+i);
-		m_ListBtn[i].Create(temp, WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX, CRect(0, 0, 30, 30), this, IDC_BTN_REFLASH+i);
-		//m_ListBtn[i].MoveWindow(&rect);
-		//m_ListBtn[i].SetWindowPos(0,0,30,30);
+		
+		m_ListBtn[i].Create(temp, WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX, rect, this, IDC_CHECK_BTN_START +i+1);
+		//m_ListBtn[i].
+	
 	}
 
 	
-	BBA_CoordinateWaveform *waveform=new BBA_CoordinateWaveform();
-	waveformList.AddTail(*waveform);
+
 	return 0;
 }
 
@@ -247,5 +266,29 @@ void BBA_Coordinate::OnBtnReflashClick()
 	{
 		KillTimer(IDC_TIMER_WAVEFORM);
 		m_BtReflash.SetWindowTextA(startTitle);
+	}
+
+}
+
+void BBA_Coordinate::OnCheckButton(UINT ID)
+{
+	CButton* pBtn = (CButton*)GetDlgItem(ID);
+	int state = pBtn->GetCheck();
+	static POSITION pos[LIST_NUM];
+
+	int waveformPos = ID-IDC_CHECK_BTN_START - 1;
+
+	if (state == 1)
+	{
+		//创建波形图
+		BBA_CoordinateWaveform *waveform = new BBA_CoordinateWaveform();
+		//waveform->colour = m_ListColor[waveformPos];
+		waveformList.AddTail(*waveform);
+		pos[waveformPos] = waveformList.GetTailPosition();
+		waveformList.GetAt(pos[waveformPos]).colour= m_ListColor[waveformPos];
+	}
+	else
+	{
+		waveformList.RemoveAt(pos[waveformPos]);
 	}
 }
