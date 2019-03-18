@@ -102,7 +102,7 @@ BBA_Coordinate::~BBA_Coordinate() {};
 
 int BBA_Coordinate::CreatCoordinateWindow(CString wndTitle, CRect *rect, CWnd* pParent, DWORD id, DWORD style)
 {
-	unsigned long int myStyle = WS_SYSMENU | WS_HSCROLL;
+	unsigned long int myStyle = WS_SYSMENU;
 	int ret = CreatWindow(wndTitle, rect, pParent, id, myStyle);
 	return ret;
 }
