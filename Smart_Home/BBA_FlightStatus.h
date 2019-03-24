@@ -14,7 +14,7 @@ public:
 	/******************text 相关****************/
 #define STATIC_MAX_LINE_TEXT_NUM	10	//每一行最多有
 #define STATIC_MAX_LIST_TEXT_NUM	10	//每一列
-#define STATIC_MAX_STRLENGTH	30	//最多可以输出30个字符
+#define STATIC_MAX_STRLENGTH	50	//最多可以输出30个字符
 
 	CPoint textStartPoint;
 	CPoint textPoint[STATIC_MAX_LINE_TEXT_NUM][STATIC_MAX_LIST_TEXT_NUM];	//TEXT输出的位置
@@ -44,7 +44,7 @@ public:
 	BBA_UDP *bba_Station_udp;	//UDP类对象指针
 public:
 	int CreatFlightStatusWindow(CString wndTitle, CRect *rect = NULL, CWnd* pParent = NULL, DWORD id = 0, DWORD style = WS_VISIBLE | WS_CHILD);
-	int UpdataFlightStatusWindows(char *buff);
+	int UpdataFlightStatusWindows(char *buff,int len);
 	
 public:
 	afx_msg void OnSize(UINT nType, int cx, int cy);

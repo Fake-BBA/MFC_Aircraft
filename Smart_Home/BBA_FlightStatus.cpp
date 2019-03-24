@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "BBA_FlightStatus.h"
 #include "Resource.h"
+#include "smartHomeTypedef.h"
 
 BBA_FlightStatus::BBA_FlightStatus()
 {
@@ -72,7 +73,7 @@ int BBA_FlightStatus::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	textLineNum=3;	//每一行有3个text
 	textListNum=3;	//每一列有3个text
 	textLineInterval = 30;	//每一行间隔为10个像素
-	textListInterval = 80;	//每一列的间隔为20个像素
+	textListInterval = 150;	//每一列的间隔为20个像素
 
 	textStartPoint.x = 20;	//text矩阵输出的起点x
 	textStartPoint.y = 50;	//text矩阵输出的起点y
@@ -114,6 +115,8 @@ int BBA_FlightStatus::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	slider[0][0].SetRange(-180, 180, TRUE);
 	slider[0][1].SetRange(-180, 180, TRUE);
 	slider[0][2].SetRange(-180, 180, TRUE);
+	
+	return 0;
 }
 
 void BBA_FlightStatus::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
@@ -123,7 +126,9 @@ void BBA_FlightStatus::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar
 	BBA_CWnd::OnHScroll(nSBCode, nPos, pScrollBar);
 	pScrollBar->GetDlgCtrlID();
 
-	char outPutPos[10];
+	char outPutPos[10];	//存储数字串
+	char SendBuff[50];	
+	int sendPos=0;	//sendBuff的索引
 	for (int i = 0; i < sliderLineNum; i++)
 	{
 		for (int j = 0; j < sliderListNum; j++)
@@ -141,10 +146,43 @@ void BBA_FlightStatus::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar
 			}
 		}
 	}
+	bba_Station_udp->Send(SendBuff,sendPos);
 }
 
 int BBA_FlightStatus::UpdataFlightStatusWindows(char *buff, int len)
 {
+	float pitch =(int16(buff[4] << 8)  + uint8(buff[5])) / 100;
+	float roll= (int16(buff[6] << 8)  + uint8(buff[7])) / 100;
+	float yaw= (int16(buff[8] << 8) + uint8(buff[9]) ) / 100;
 
+	int acc_x = (int16(buff[4] << 8) + uint8(buff[5]));
+	int acc_y= (int16(buff[4] << 8) + uint8(buff[5]));
+	int acc_z= (int16(buff[4] << 8) + uint8(buff[5]));
 
+	int gyro_x= (int16(buff[4] << 8) + uint8(buff[5]));
+	int gyro_y= (int16(buff[4] << 8) + uint8(buff[5]));
+	int gyro_z= (int16(buff[4] << 8) + uint8(buff[5]));
+	
+	sprintf(textStr[0][0], "Pitch:%f        ", pitch);
+	sprintf(textStr[0][1], "Roll:%f        ", roll);
+	sprintf(textStr[0][2], "Yaw:%f        ", yaw);
+
+	sprintf(textStr[1][0], "ACC_X:%d        ", acc_x);
+	sprintf(textStr[1][1], "ACC_Y:%d        ", acc_y);
+	sprintf(textStr[1][2], "ACC_Z:%d        ", acc_z);
+
+	sprintf(textStr[2][0], "GYRO_X:%d        ", gyro_x);
+	sprintf(textStr[2][1], "GYRO_Y:%d        ", gyro_y);
+	sprintf(textStr[2][2], "GYRO_Z:%d        ", gyro_z);
+
+	//return 1;
+	//Invalidate();	//发出重绘消息OnPaint
+	for (int i = 0; i < textLineNum; i++)
+	{
+		for (int j = 0; j < textListNum; j++)
+		{
+			m_pPDC->TextOut(textPoint[i][j].x, textPoint[i][j].y, textStr[i][j]);
+		}
+	}
+	return 0;
 }
