@@ -183,6 +183,7 @@
     <ClInclude Include="BBA_Coordinate.h" />
     <ClInclude Include="BBA_CWnd.h" />
     <ClInclude Include="BBA_DataStruct.h" />
+    <ClInclude Include="BBA_FlightStatus.h" />
     <ClInclude Include="bba_log.h" />
     <ClInclude Include="BBA_SOCKET.h" />
     <ClInclude Include="Resource.h" />
@@ -196,6 +197,7 @@
     <ClCompile Include="BBA_Coordinate.cpp" />
     <ClCompile Include="BBA_CWnd.cpp" />
     <ClCompile Include="BBA_DataStruct.cpp" />
+    <ClCompile Include="BBA_FlightStatus.cpp" />
     <ClCompile Include="bba_log.cpp" />
     <ClCompile Include="BBA_SOCKET.cpp" />
     <ClCompile Include="Smart_Home.cpp" />

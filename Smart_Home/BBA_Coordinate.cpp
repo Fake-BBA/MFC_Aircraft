@@ -267,7 +267,6 @@ void BBA_Coordinate::OnBtnReflashClick()
 		KillTimer(IDC_TIMER_WAVEFORM);
 		m_BtReflash.SetWindowTextA(startTitle);
 	}
-
 }
 
 void BBA_Coordinate::OnCheckButton(UINT ID)
