@@ -70,8 +70,8 @@ int BBA_FlightStatus::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	GetClientRect(&m_RectClientWindow);
 
-	textLineNum=3;	//每一行有3个text
-	textListNum=3;	//每一列有3个text
+	textLineNum=4;	//每一行有4个text
+	textListNum=4;	//每一列有4个text
 	textLineInterval = 30;	//每一行间隔为10个像素
 	textListInterval = 150;	//每一列的间隔为20个像素
 
@@ -119,6 +119,54 @@ int BBA_FlightStatus::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	return 0;
 }
 
+void BBA_FlightStatus::SendData()
+{
+	
+	uint8 sendBuff[50];
+	uint8 pos = 0;
+
+	sendBuff[pos++] = 0XAA;
+	sendBuff[pos++] = 0XAF;
+	sendBuff[pos++] = LOOP_TIME;	//功能字
+	sendBuff[pos++] = 0x00;		//数据长度
+
+	sendBuff[pos++] = sendData.Throttle >> 8;
+	sendBuff[pos++] = sendData.Throttle;
+
+	sendBuff[pos++] = sendData.Yaw >> 8;
+	sendBuff[pos++] = sendData.Yaw;
+
+	sendBuff[pos++] = sendData.Roll >> 8;
+	sendBuff[pos++] = sendData.Roll;
+
+	sendBuff[pos++] = sendData.Pitch >> 8;
+	sendBuff[pos++] = sendData.Pitch;
+
+	sendBuff[pos++] = sendData.AUX1 >> 8;
+	sendBuff[pos++] = sendData.AUX1;
+	sendBuff[pos++] = sendData.AUX2 >> 8;
+	sendBuff[pos++] = sendData.AUX2;
+	sendBuff[pos++] = sendData.AUX3 >> 8;
+	sendBuff[pos++] = sendData.AUX3;
+	sendBuff[pos++] = sendData.AUX4 >> 8;
+	sendBuff[pos++] = sendData.AUX4;
+	sendBuff[pos++] = sendData.AUX5 >> 8;
+	sendBuff[pos++] = sendData.AUX5;
+	sendBuff[pos++] = sendData.AUX6 >> 8;
+	sendBuff[pos++] = sendData.AUX6;
+	sendBuff[3] = pos - 4;
+
+	uint8 sum = 0;
+	for (uint8 i = 0; i < pos; i++)
+	{
+		sum += sendBuff[i];
+	}
+
+	sendBuff[pos++] = sum;
+
+	bba_Station_udp->Send((char*)sendBuff, pos);
+
+}
 void BBA_FlightStatus::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
@@ -127,8 +175,9 @@ void BBA_FlightStatus::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar
 	pScrollBar->GetDlgCtrlID();
 
 	char outPutPos[10];	//存储数字串
-	char SendBuff[50];	
-	int sendPos=0;	//sendBuff的索引
+
+	
+
 	for (int i = 0; i < sliderLineNum; i++)
 	{
 		for (int j = 0; j < sliderListNum; j++)
@@ -146,43 +195,94 @@ void BBA_FlightStatus::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar
 			}
 		}
 	}
-	bba_Station_udp->Send(SendBuff,sendPos);
+
+	sendData.Throttle = slider[0][3].GetPos();
+	sendData.Yaw = slider[0][2].GetPos();
+	sendData.Roll = slider[0][1].GetPos();
+	sendData.Pitch = slider[0][0].GetPos();
+
+	sendData.AUX1 = slider[0][4].GetPos();
+	sendData.AUX2 = slider[0][5].GetPos();
+	sendData.AUX3 = slider[0][6].GetPos();
+	sendData.AUX4 = slider[0][7].GetPos();
+	sendData.AUX5 = slider[0][8].GetPos();
+	sendData.AUX6 = slider[0][9].GetPos();
+
+	SendData();
 }
 
 int BBA_FlightStatus::UpdataFlightStatusWindows(char *buff, int len)
 {
-	float pitch =(int16(buff[4] << 8)  + uint8(buff[5])) / 100;
-	float roll= (int16(buff[6] << 8)  + uint8(buff[7])) / 100;
-	float yaw= (int16(buff[8] << 8) + uint8(buff[9]) ) / 100;
+	enum FlightFuntionWord funtionWord;
+	float pitch, roll, yaw;
+	int acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z;
+	uint32 imuLoopTime,mpuLoopTime;
 
-	int acc_x = (int16(buff[4] << 8) + uint8(buff[5]));
-	int acc_y= (int16(buff[4] << 8) + uint8(buff[5]));
-	int acc_z= (int16(buff[4] << 8) + uint8(buff[5]));
+	uint8 framePos=0;	//记录帧头在buff的位置
+	uint8 frameLength;	//一帧的长度
+	//uint8 buff[50];
 
-	int gyro_x= (int16(buff[4] << 8) + uint8(buff[5]));
-	int gyro_y= (int16(buff[4] << 8) + uint8(buff[5]));
-	int gyro_z= (int16(buff[4] << 8) + uint8(buff[5]));
-	
-	sprintf(textStr[0][0], "Pitch:%f        ", pitch);
-	sprintf(textStr[0][1], "Roll:%f        ", roll);
-	sprintf(textStr[0][2], "Yaw:%f        ", yaw);
-
-	sprintf(textStr[1][0], "ACC_X:%d        ", acc_x);
-	sprintf(textStr[1][1], "ACC_Y:%d        ", acc_y);
-	sprintf(textStr[1][2], "ACC_Z:%d        ", acc_z);
-
-	sprintf(textStr[2][0], "GYRO_X:%d        ", gyro_x);
-	sprintf(textStr[2][1], "GYRO_Y:%d        ", gyro_y);
-	sprintf(textStr[2][2], "GYRO_Z:%d        ", gyro_z);
-
-	//return 1;
-	//Invalidate();	//发出重绘消息OnPaint
-	for (int i = 0; i < textLineNum; i++)
+	//while (1)
 	{
-		for (int j = 0; j < textListNum; j++)
+		//frameLength = rcBuff[framePos + 3];
+		//memcpy(buff, rcBuff+framePos, frameLength + 4);
+		//framePos += frameLength + 4;	//下一帧的位置
+
+		switch (uint8(buff[2]))
 		{
-			m_pPDC->TextOut(textPoint[i][j].x, textPoint[i][j].y, textStr[i][j]);
+
+		case STATUS:
+			pitch = float(int16(buff[4] << 8) + uint8(buff[5])) / 100;
+			roll = float(int16(buff[6] << 8) + uint8(buff[7])) / 100;
+			yaw = float(int16(buff[8] << 8) + uint8(buff[9])) / 100;
+
+			sprintf(textStr[0][0], "Pitch:%f        ", pitch);
+			sprintf(textStr[0][1], "Roll:%f        ", roll);
+			sprintf(textStr[0][2], "Yaw:%f        ", yaw);
+
+			m_pPDC->TextOut(textPoint[0][0].x, textPoint[0][0].y, textStr[0][0]);
+			m_pPDC->TextOut(textPoint[0][1].x, textPoint[0][1].y, textStr[0][1]);
+			m_pPDC->TextOut(textPoint[0][2].x, textPoint[0][2].y, textStr[0][2]);
+			break;
+		case SENSER:
+			acc_x = (int16(buff[4] << 8) + uint8(buff[5]));
+			acc_y = (int16(buff[4] << 8) + uint8(buff[5]));
+			acc_z = (int16(buff[4] << 8) + uint8(buff[5]));
+
+			gyro_x = (int16(buff[4] << 8) + uint8(buff[5]));
+			gyro_y = (int16(buff[4] << 8) + uint8(buff[5]));
+			gyro_z = (int16(buff[4] << 8) + uint8(buff[5]));
+
+			sprintf(textStr[1][0], "ACC_X:%d        ", acc_x);
+			sprintf(textStr[1][1], "ACC_Y:%d        ", acc_y);
+			sprintf(textStr[1][2], "ACC_Z:%d        ", acc_z);
+
+			sprintf(textStr[2][0], "GYRO_X:%d        ", gyro_x);
+			sprintf(textStr[2][1], "GYRO_Y:%d        ", gyro_y);
+			sprintf(textStr[2][2], "GYRO_Z:%d        ", gyro_z);
+
+			m_pPDC->TextOut(textPoint[1][0].x, textPoint[1][0].y, textStr[1][0]);
+			m_pPDC->TextOut(textPoint[1][1].x, textPoint[1][1].y, textStr[1][1]);
+			m_pPDC->TextOut(textPoint[1][2].x, textPoint[1][2].y, textStr[1][2]);
+
+			m_pPDC->TextOut(textPoint[2][0].x, textPoint[2][0].y, textStr[2][0]);
+			m_pPDC->TextOut(textPoint[2][1].x, textPoint[2][1].y, textStr[2][1]);
+			m_pPDC->TextOut(textPoint[2][2].x, textPoint[2][2].y, textStr[2][2]);
+			break;
+		case LOOP_TIME:
+			imuLoopTime = int32(buff[4] << 24) + uint32(buff[5] << 16) + uint32(buff[6] << 8) + uint32(buff[7]);	//ns
+			sprintf(textStr[3][0], "IMU_LoopTime:%d ns       ", imuLoopTime);
+			m_pPDC->TextOut(textPoint[3][0].x, textPoint[3][0].y, textStr[3][0]);
+
+			mpuLoopTime = int32(buff[8] << 24) + uint32(buff[9] << 16) + uint32(buff[10] << 8) + uint32(buff[11]);	//ns
+			sprintf(textStr[3][1], "MPU_LoopTime:%d ns       ", mpuLoopTime);
+			m_pPDC->TextOut(textPoint[3][1].x, textPoint[3][1].y, textStr[3][1]);
+			break;
 		}
+
+		//if (framePos >= len) break;
 	}
+	
+
 	return 0;
 }
