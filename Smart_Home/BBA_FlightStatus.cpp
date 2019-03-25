@@ -71,7 +71,7 @@ int BBA_FlightStatus::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	GetClientRect(&m_RectClientWindow);
 
 	textLineNum=4;	//每一行有4个text
-	textListNum=4;	//每一列有4个text
+	textListNum=3;	//每一列有4个text
 	textLineInterval = 30;	//每一行间隔为10个像素
 	textListInterval = 150;	//每一列的间隔为20个像素
 
@@ -115,6 +115,22 @@ int BBA_FlightStatus::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	slider[0][0].SetRange(-180, 180, TRUE);
 	slider[0][1].SetRange(-180, 180, TRUE);
 	slider[0][2].SetRange(-180, 180, TRUE);
+	slider[0][3].SetRange(1000, 2000, TRUE);
+
+	slider[0][0].SetPos(0);
+	slider[0][1].SetPos(0);
+	slider[0][2].SetPos(0);
+	slider[0][3].SetPos(0);
+
+
+	slider[0][4].SetRange(1000, 2000, TRUE);
+	slider[0][5].SetRange(1000, 2000, TRUE);
+	slider[0][6].SetRange(1000, 2000, TRUE);
+	slider[0][7].SetRange(1000, 2000, TRUE);
+	slider[0][8].SetRange(1000, 2000, TRUE);
+	slider[0][9].SetRange(1000, 2000, TRUE);
+	slider[0][10].SetRange(1000, 2000, TRUE);
+	slider[0][11].SetRange(1000, 2000, TRUE);
 	
 	return 0;
 }
@@ -227,6 +243,13 @@ int BBA_FlightStatus::UpdataFlightStatusWindows(char *buff, int len)
 		//frameLength = rcBuff[framePos + 3];
 		//memcpy(buff, rcBuff+framePos, frameLength + 4);
 		//framePos += frameLength + 4;	//下一帧的位置
+		uint8 checkSum = 0;
+		uint8 rang = buff[3] + 4;
+		for (uint8 i = 0; i < rang; i++)
+			checkSum += buff[i];
+
+		if (checkSum != buff[len-1])
+			return -1;
 
 		switch (uint8(buff[2]))
 		{
