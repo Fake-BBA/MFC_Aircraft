@@ -181,8 +181,8 @@ void BBA_FlightStatus::SendData()
 	sendBuff[pos++] = sum;
 
 	bba_Station_udp->Send((char*)sendBuff, pos);
-
 }
+
 void BBA_FlightStatus::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
@@ -237,6 +237,7 @@ int BBA_FlightStatus::UpdataFlightStatusWindows(char *buff, int len)
 	uint8 framePos=0;	//记录帧头在buff的位置
 	uint8 frameLength;	//一帧的长度
 	//uint8 buff[50];
+
 
 	//while (1)
 	{
